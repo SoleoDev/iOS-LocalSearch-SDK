@@ -1,19 +1,16 @@
-This SDK is a File base SDK. Its meat to help accelerated the introduction of Soleo Local Search API into your code base.
+This is a Framework SDK. Its meant to help accelerated the introduction of Soleo Local Search API into your code base.
 
-The File Base SDK is simple to use and has included documentation to allow developer to customize the SDK to their needs.
-
+The SDK framework is simple to use and has included documentation to allow developer to use our system quickly and efficiently without having to know or learn how the system actually operates.
 
 Dependancies:
-¥	SwiftyJSON : https://github.com/SwiftyJSON/SwiftyJSON.git
-¥	AsyncSwift : git@github.com:duemunk/Async.git
 ¥	iOS 9.0+
 
 
 To Use:
 
-1) Add the above dependancies to your project, either by cocoaPod or by using the files.
-2) Copy the 4 provided files into your Code base.
+1) Add all Frameworks included to your project
 3) Get a API Key from developer.soleo.com
+4) On Creation of a SoleoAPI object, set the APIKEY to your API key.
 4) Use the Objects to get, manipulate and use all business listings via search API.
 
 

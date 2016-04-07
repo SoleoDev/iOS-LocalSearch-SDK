@@ -1,4 +1,4 @@
-# iOS-SDK
+# iOS-SDK FRAMEWORK
 Soleo Local Search API for iOS (Swift 2.2)
 
 Soleo Local Search API allows developer to access Soleo's extensive Local Business Data system that includes 20,000 small, local business in the US.
@@ -23,10 +23,11 @@ External:
 SwiftyJSON : https://github.com/SwiftyJSON/SwiftyJSON.git
 Use of SwiftyJSON to allow for easier code tranlation of JSON data.
 
+
 #How to use
 
 1) Create a API key in developer.soleo.com
-2) Add Files to your Project
+2) Add Framework Files to your Project
 3) Add dependancies to the project as needed.
   3.1) Can use direct includes of SwiftyJSON or the recomended mode of CocoaPods
 4) Change the API key in SoleoAPI.swift file

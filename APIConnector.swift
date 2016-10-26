@@ -8,25 +8,24 @@
  
  */
 import Foundation
-import Async
 import SwiftyJSON
 
 
-/// Type Alias that will return a JSON, a NSError and a APIConnector Response object
-public typealias ServiceResponse = (JSON?, NSError?, APIConnector_Response?) -> Void
+/// Type Alias that will return a JSON, a Error and a APIConnector Response object
+public typealias ServiceResponse = (JSON?, Error?, APIConnector_Response?) -> Void
 
 /** 
  -class : APIConnector
  -helps : SoleoAPI
 */
-public class APIConnector {
+open class APIConnector {
     
     //MARK: Fields
         /// static SHARE instance of a APIConnector. This way we save memory.
-    public static let sharedInstance = APIConnector()
+    open static let sharedInstance = APIConnector()
     
-        /// NSURLSession that is a shared Session to save memory.
-    let session = NSURLSession.sharedSession()
+        /// NSURLSession that is NOT a shared Session to have flexibility.
+    fileprivate var session : URLSession?
     
     //MARK: HTTP - GET functions
     
@@ -40,7 +39,7 @@ public class APIConnector {
      - parameter method:       HTTP method - GET / POST
      - parameter onCompletion: Service Response object that has the return information
      */
-    func connect(URL: String, method: String, onCompletion: ServiceResponse){
+    func connect(_ URL: String, method: String, onCompletion: @escaping ServiceResponse){
         //print("APIConector: \(URL)")
         makeHTTPSRequest(URL,methodToUse: method, onCompletion: { (json, err, response) -> Void in
             onCompletion(json, err, response)
@@ -56,12 +55,38 @@ public class APIConnector {
      - parameter methodToUse:  HTTP method to use: Get or POST
      - parameter onCompletion: ServiceResponse type. Format as JSON, NSErrr, APIConnector_Response.
      */
-    private func makeHTTPSRequest(path: String, methodToUse: String, onCompletion: ServiceResponse){
-        let request = NSMutableURLRequest(URL: NSURL(string: path)!)
-        request.HTTPMethod = methodToUse
+    fileprivate func makeHTTPSRequest(_ path: String, methodToUse: String, onCompletion: @escaping ServiceResponse){
+        
+        var request = NSMutableURLRequest()
+        
+        let originalURLString = path as CFString
+        
+        let preprocessedString =
+            CFURLCreateStringByReplacingPercentEscapes(kCFAllocatorDefault, originalURLString, nil);
+        
+        let newurl = CFURLCreateWithString(kCFAllocatorDefault, preprocessedString, nil);
         
         
-        let task = session.dataTaskWithRequest(request,completionHandler:{ (data, response, error) in
+//        if let url = NSURL(string: path)
+        if newurl != nil
+        {
+            request = NSMutableURLRequest(url: newurl as! URL)
+            request.httpMethod = methodToUse
+        }
+        else{
+            
+            let digestedResponse = APIConnector_Response(response: 404, Description: "Error with Search Query")
+            onCompletion(nil,nil,digestedResponse)
+            return
+        }
+        
+        let urlconfig = URLSessionConfiguration.default
+        urlconfig.timeoutIntervalForRequest = 7
+        urlconfig.timeoutIntervalForResource = 7
+        
+        self.session = URLSession.init(configuration: urlconfig, delegate: nil , delegateQueue: nil)
+        
+        let task = session?.dataTask(with: request as URLRequest,completionHandler:{ (data, response, error) in
             
             guard let data = data else {
                 onCompletion(nil, error,nil)
@@ -69,9 +94,9 @@ public class APIConnector {
             }
                 //TODO: Check Later for thread execution problems
                 //WHY IS THIS IN THE FOREGROUND... This should go to the background
-                Async.main{
+                DispatchQueue.main.async{
                     
-                    let responseResult = response as! NSHTTPURLResponse
+                    let responseResult = response as! HTTPURLResponse
                     var digestedResponse = APIConnector_Response(response: responseResult.statusCode, Description: "")
                     
                     
@@ -89,55 +114,55 @@ public class APIConnector {
                         
                         //Error with Query
                     case 400:
-                        digestedResponse.Description = String(data: data, encoding: NSUTF8StringEncoding) ?? ""
-                        digestedResponse.Description = "Unexpected response found, please check the response manually."
+                        digestedResponse.Description = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                        digestedResponse.Description.append(" Unexpected response found, please check the response manually.")
                         onCompletion(nil,error,digestedResponse)
                         return
                         
                         
                         //Error invalid endpoint or timeout
                     case 404:
-                        digestedResponse.Description = String(data: data, encoding: NSUTF8StringEncoding) ?? ""
-                        digestedResponse.Description = "Unexpected response found, please check the response manually."
+                        digestedResponse.Description = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                        digestedResponse.Description.append(" Unexpected response found, please check the response manually.")
                         onCompletion(nil,error,digestedResponse)
                         return
                         
                         
                         //Search not done with GET
                     case 405:
-                        digestedResponse.Description = String(data: data, encoding: NSUTF8StringEncoding) ?? ""
-                        digestedResponse.Description = "Unexpected response found, please check the response manually."
+                        digestedResponse.Description = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                        digestedResponse.Description.append(" Unexpected response found, please check the response manually.")
                         onCompletion(nil,error,digestedResponse)
                         return
                         
                         
                         //Invalid Header
                     case 406:
-                        digestedResponse.Description = String(data: data, encoding: NSUTF8StringEncoding) ?? ""
-                        digestedResponse.Description = "Unexpected response found, please check the response manually."
+                        digestedResponse.Description = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                        digestedResponse.Description.append(" Unexpected response found, please check the response manually.")
                         onCompletion(nil,error,digestedResponse)
                         return
                         
                         
                         //Resource not there. Something is wrong with the Headers or API version requested
                     case 410:
-                        digestedResponse.Description = String(data: data, encoding: NSUTF8StringEncoding) ?? ""
-                        digestedResponse.Description = "Unexpected response found, please check the response manually."
+                        digestedResponse.Description = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                        digestedResponse.Description.append(" Unexpected response found, please check the response manually.")
                         onCompletion(nil,error,digestedResponse)
                         return
                         
                         
                         //SYSTEM DOWN... PANIC NOW!!!
                     case 500:
-                        digestedResponse.Description = String(data: data, encoding: NSUTF8StringEncoding) ?? ""
-                        digestedResponse.Description = "Unexpected response found, please check the response manually."
+                        digestedResponse.Description = String(data: data, encoding: String.Encoding.utf8) ?? ""
+                        digestedResponse.Description.append(" Unexpected response found, please check the response manually.")
                         onCompletion(nil,error,digestedResponse)
                         return
                         
                         
                         
                     default:
-                        digestedResponse.Description = "Unexpected response found, please check the response manually."
+                        digestedResponse.Description = String(data: data, encoding: String.Encoding.utf8) ?? ""
                         onCompletion(nil,error,digestedResponse)
                         return
                         
@@ -146,11 +171,10 @@ public class APIConnector {
                     print(#function, #line , #file, "going to send onCompletion")
                     onCompletion(JSON(data:data),nil,digestedResponse)
                     
-                    
                 }
         } )
         
-        task.resume()
+        task?.resume()
     }
     
     //MARK: CleanUp functions
@@ -163,8 +187,13 @@ public class APIConnector {
         WILL CAUSE memory leaks if not closed
      
      */
-    public func closeSession(){
-        self.session.finishTasksAndInvalidate()
+    open func closeSession(){
+        
+        if (self.session != nil)
+        {
+            self.session?.finishTasksAndInvalidate()
+        }
+        
     }
 
 }

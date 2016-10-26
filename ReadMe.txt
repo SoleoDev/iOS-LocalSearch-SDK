@@ -4,11 +4,12 @@ The SDK framework is simple to use and has included documentation to allow devel
 
 Dependancies:
 ¥	iOS 9.0+
+¥	Swifty JSON
 
 
 To Use:
 
-1) Add all Frameworks included to your project
+1) Add Framework to your project as a embedded library
 3) Get a API Key from developer.soleo.com
 4) On Creation of a SoleoAPI object, set the APIKEY to your API key.
 4) Use the Objects to get, manipulate and use all business listings via search API.

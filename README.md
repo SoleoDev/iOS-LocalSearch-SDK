@@ -56,4 +56,4 @@ Error Return codes
   - 500 = System Down
 
 Contact information:
-localsearchapi@soleo.com
+soleodeveloper@soleo.com
